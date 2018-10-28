@@ -65,7 +65,17 @@ func main() {
 				continue
 			}
 
-			tg_chan <- "<" + update.Message.From.UserName + "> " + update.Message.Text
+
+			var name string
+
+			if update.Message.From.UserName == "" {
+				name = update.Message.From.FirstName + " " + update.Message.From.LastName
+			} else {
+				name = "@" +  update.Message.From.UserName
+			}
+
+
+			tg_chan <- "<" + name + "> " + update.Message.Text
 
 		}
 	}()
