@@ -1,21 +1,22 @@
 package main
 
 import (
+	"crypto/tls"
+	"encoding/json"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/thoj/go-ircevent"
-	"log"
-	"crypto/tls"
-	"time"
-	"encoding/json"
 	"io/ioutil"
+	"log"
+	"time"
 )
 
-const channel = "#ctlug.tw.test";
+const channel = "#ctlug.tw.test"
 
 type Config struct {
-	Apikey		string `json:"apikey"`
-	Hostname	string `json:"hostname"`
-	Nick		string `json:"nick"`
+	Tg_Apikey	string `json:"tg_apikey"`
+	Tg_groupid	string `json:"tg_groupid"`
+	Irc_Hostname	string `json:"irc_hostname"`
+	Irc_Nick	string `json:"irc_nick"`
 	Admin		string `json:"admin"`
 }
 
@@ -29,32 +30,34 @@ func (config *Config) load() {
 }
 
 func ircbot(config Config) {
-        irccon := irc.IRC(config.Nick, "IRCTestSSL")
-        irccon.VerboseCallbackHandler = true
-        irccon.Debug = true
-        irccon.UseTLS = true
-        irccon.TLSConfig = &tls.Config{InsecureSkipVerify: true}
-        irccon.AddCallback("001", func(e *irc.Event) { irccon.Join(channel) })
+	irccon := irc.IRC(config.Irc_Nick, "IRCTestSSL")
+	irccon.VerboseCallbackHandler = true
+	irccon.Debug = true
+	irccon.UseTLS = true
+	irccon.TLSConfig = &tls.Config{InsecureSkipVerify: true}
+	irccon.AddCallback("001", func(e *irc.Event) { irccon.Join(channel) })
 
 	irccon.AddCallback("PRIVMSG", func(event *irc.Event) {
-		log.Printf("%s", event.Message())
-		log.Printf("%s", event.Nick)
-		log.Printf("%s", event.Arguments[0])
+		go func(event *irc.Event) {
+			log.Printf("%s", event.Message())
+			log.Printf("%s", event.Nick)
+			log.Printf("%s", event.Arguments[0])
 
-		irccon.Privmsg(channel, event.Message())
-	});
+			irccon.Privmsg(channel, event.Message())
+		}(event)
+	})
 
-        err := irccon.Connect(config.Hostname)
+	err := irccon.Connect(config.Irc_Hostname)
 	if err != nil {
 		log.Panic(err)
 		return
 	}
 
-        irccon.Loop()
+	irccon.Loop()
 }
 
 func tg(config Config) {
-	bot, err := tgbotapi.NewBotAPI(config.Apikey)
+	bot, err := tgbotapi.NewBotAPI(config.Tg_Apikey)
 	if err != nil {
 		log.Panic(err)
 	}
