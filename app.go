@@ -57,7 +57,7 @@ func main() {
 			log.Printf("[%s] %s ", update.Message.From.UserName, update.Message.Text)
 			log.Printf("%d", update.Message.Chat.ID)
 
-			if update.Message == nil { // ignore any non-Message Updates
+			if update.Message.Text == "" { // ignore any non-Message Updates
 				continue
 			}
 
